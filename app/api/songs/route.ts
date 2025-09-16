@@ -43,6 +43,8 @@ export async function POST(request: Request) {
           artist: body.artist,
           tone: body.tone,
           youtube_url: body.youtube_url,
+          bpm: body.bpm, 
+          duration: body.duration, 
         },
       ])
       .select() // Retorna o objeto inserido

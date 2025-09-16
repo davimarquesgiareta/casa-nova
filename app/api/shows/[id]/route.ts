@@ -47,6 +47,7 @@ export async function PUT(
       name: body.name,
       event_date: body.event_date,
       venue: body.venue,
+      show_time: body.show_time,
     })
     .eq("id", id)
     .select()

@@ -49,6 +49,8 @@ export async function PUT(
       artist: body.artist,
       tone: body.tone,
       youtube_url: body.youtube_url,
+      bpm: body.bpm, 
+      duration: body.duration, 
     })
     .eq("id", id) // Especifica qual música atualizar
     .select()
