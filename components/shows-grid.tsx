@@ -9,11 +9,11 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
-import { Plus, Folder, Music, Clock, Edit, Trash2, Eye, X, Loader2 } from "lucide-react"
+import { Plus, Folder, Music, Clock, Edit, Trash2, Eye, X, Loader2, GripVertical } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
-import { useIsMobile } from "@/hooks/use-mobile" // IMPORTAMOS O HOOK
+import { useIsMobile } from "@/hooks/use-mobile"
 import { MusicLibraryForShowComponent } from "./music-library-for-show"
-import { AddSongToShowMobileComponent } from "./add-song-to-show-mobile" // IMPORTAMOS O COMPONENTE MOBILE
+import { AddSongToShowMobileComponent } from "./add-song-to-show-mobile"
 
 type Song = {
   id: string;
@@ -39,7 +39,7 @@ type ShowDetails = Show & {
 };
 
 export function ShowsGrid() {
-  const isMobile = useIsMobile(); // USAMOS O HOOK AQUI
+  const isMobile = useIsMobile();
   
   const [shows, setShows] = useState<Show[]>([])
   const [loading, setLoading] = useState(true)
@@ -51,6 +51,8 @@ export function ShowsGrid() {
   const [dragOverShow, setDragOverShow] = useState<string | null>(null)
   const { toast } = useToast()
   const [formData, setFormData] = useState({ name: "", venue: "", event_date: "", show_time: "" });
+
+  const [draggedItemIndex, setDraggedItemIndex] = useState<number | null>(null);
 
   const fetchShows = async () => {
     setLoading(true);
@@ -76,53 +78,65 @@ export function ShowsGrid() {
     fetchShows();
   }
 
-  const handleViewShow = async (show: Show) => {
-    try {
-        const response = await fetch(`/api/shows/${show.id}/songs`);
-        if(!response.ok) throw new Error('Erro ao buscar repertório');
-        const songsData = await response.json();
-        const fullShowDetails: ShowDetails = { ...show, songs: songsData };
-        setSelectedShow(fullShowDetails);
-        setIsShowDetailOpen(true);
-    } catch (error) {
-        toast({ title: "Erro", description: "Não foi possível carregar detalhes.", variant: "destructive" });
-    }
-  };
-
-  const handleAddSongToShow = async (song: Song, showId: string) => {
-      if (!selectedShow) return;
-      if (selectedShow.songs.find(s => s.id === song.id)) {
-        toast({ title: "Aviso", description: "Essa música já está no repertório." });
-        return;
-      }
-      const optimisticSongs = [...selectedShow.songs, song];
-      setSelectedShow({ ...selectedShow, songs: optimisticSongs });
-
-      try {
-          const response = await fetch(`/api/shows/${showId}/songs`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ song_id: song.id }) });
-          if(!response.ok) {
-              setSelectedShow({ ...selectedShow, songs: selectedShow.songs });
-              const err = await response.json();
-              throw new Error(err.error);
-          };
-      } catch (error: any) {
-          toast({ title: "Erro ao salvar", description: error.message, variant: "destructive" });
-          setSelectedShow({ ...selectedShow, songs: selectedShow.songs });
-      }
-  };
-
-  // ... (outras funções como handleSubmit, handleEdit, handleDelete, etc., continuam iguais)
   const handleSubmit = async (e: React.FormEvent) => { e.preventDefault(); const url = editingShow ? `/api/shows/${editingShow.id}` : '/api/shows'; const method = editingShow ? 'PUT' : 'POST'; try { const response = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(formData) }); if (!response.ok) { const err = await response.json(); throw new Error(err.error); } toast({ title: "Sucesso", description: `Show ${editingShow ? 'atualizado' : 'criado'}!` }); setIsDialogOpen(false); resetForm(); fetchShows(); } catch (error: any) { toast({ title: "Erro", description: error.message, variant: "destructive" }); } };
   const handleEdit = (show: Show) => { setEditingShow(show); setFormData({ name: show.name, venue: show.venue || "", event_date: show.event_date ? show.event_date.split('T')[0] : "", show_time: show.show_time || "" }); setIsDialogOpen(true); };
   const handleDelete = async (showId: string) => { if (!confirm("Tem certeza que deseja excluir este show?")) return; try { const response = await fetch(`/api/shows/${showId}`, { method: 'DELETE' }); if (!response.ok) throw new Error('Erro ao deletar show'); toast({ title: "Sucesso", description: "Show excluído!" }); fetchShows(); } catch (error) { toast({ title: "Erro", description: "Não foi possível excluir.", variant: "destructive" }); } };
+  const handleViewShow = async (show: Show) => { try { const response = await fetch(`/api/shows/${show.id}/songs`); if(!response.ok) throw new Error('Erro ao buscar repertório'); const songsData = await response.json(); const fullShowDetails: ShowDetails = { ...show, songs: songsData }; setSelectedShow(fullShowDetails); setIsShowDetailOpen(true); } catch (error) { toast({ title: "Erro", description: "Não foi possível carregar detalhes.", variant: "destructive" }); } };
+  const handleAddSongToShow = async (song: Song, showId: string) => { if (!selectedShow) return; if (selectedShow.songs.find(s => s.id === song.id)) { toast({ title: "Aviso", description: "Essa música já está no repertório." }); return; } const optimisticSongs = [...selectedShow.songs, song]; setSelectedShow({ ...selectedShow, songs: optimisticSongs }); try { const response = await fetch(`/api/shows/${showId}/songs`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ song_id: song.id }) }); if(!response.ok) { setSelectedShow({ ...selectedShow, songs: selectedShow.songs }); const err = await response.json(); throw new Error(err.error); }; } catch (error: any) { toast({ title: "Erro ao salvar", description: error.message, variant: "destructive" }); setSelectedShow({ ...selectedShow, songs: selectedShow.songs }); } };
   const handleRemoveSongFromShow = async (songId: string) => { if(!selectedShow) return; const originalSongs = selectedShow.songs; const optimisticSongs = originalSongs.filter(s => s.id !== songId); setSelectedShow({ ...selectedShow, songs: optimisticSongs }); try { const response = await fetch(`/api/shows/${selectedShow.id}/songs/${songId}`, { method: 'DELETE' }); if(!response.ok) { setSelectedShow({ ...selectedShow, songs: originalSongs }); throw new Error('Erro ao remover música'); } } catch(error) { toast({ title: "Erro", description: "Não foi possível remover.", variant: "destructive" }); } };
   const handleDragOver = (e: React.DragEvent, showId: string) => { e.preventDefault(); setDragOverShow(showId); };
   const handleDragLeave = (e: React.DragEvent) => { e.preventDefault(); setDragOverShow(null); };
   const handleDropOnCard = (e: React.DragEvent, showId: string) => { e.preventDefault(); setDragOverShow(null); const songData = JSON.parse(e.dataTransfer.getData("application/json")) as Song; fetch(`/api/shows/${showId}/songs`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ song_id: songData.id }) }).then(res => { if(res.ok) { toast({ title: "Música adicionada!", description: `"${songData.title}" adicionada a "${shows.find(s=>s.id===showId)?.name}".`}); fetchShows(); } else { toast({ title: "Erro", description: "Não foi possível adicionar a música.", variant: "destructive"}); } }); };
-  const handleDropOnSetlist = (e: React.DragEvent) => { e.preventDefault(); if (selectedShow) { const songData = JSON.parse(e.dataTransfer.getData("application/json")) as Song; handleAddSongToShow(songData, selectedShow.id); } }
   const resetForm = () => { setFormData({ name: "", venue: "", event_date: "", show_time: "" }); };
   const calculateTotalDuration = (songs: Song[] = []) => { const totalSeconds = songs.reduce((acc, song) => acc + (song.duration || 0), 0); const minutes = Math.floor(totalSeconds / 60); const seconds = totalSeconds % 60; return `${minutes}m ${seconds.toString().padStart(2, '0')}s`; }
   const filteredShows = shows.filter((show) => show.name.toLowerCase().includes(searchTerm.toLowerCase()));
+
+  const handleDragStartSetlist = (e: React.DragEvent, index: number) => {
+    setDraggedItemIndex(index);
+    e.dataTransfer.setData("source", "setlist");
+  };
+
+  const handleDragEnterSetlist = (e: React.DragEvent, index: number) => {
+    if (draggedItemIndex === null || draggedItemIndex === index) return;
+    if (selectedShow) {
+      const newSongs = [...selectedShow.songs];
+      const [removed] = newSongs.splice(draggedItemIndex, 1);
+      newSongs.splice(index, 0, removed);
+      setSelectedShow({ ...selectedShow, songs: newSongs });
+      setDraggedItemIndex(index);
+    }
+  };
+
+  const handleDragEndSetlist = async () => {
+    if (draggedItemIndex === null || !selectedShow) return;
+    const songIdsInNewOrder = selectedShow.songs.map(song => song.id);
+    try {
+      const response = await fetch(`/api/shows/${selectedShow.id}/songs/reorder`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ songIds: songIdsInNewOrder }),
+      });
+      if (!response.ok) throw new Error("Falha ao salvar a nova ordem.");
+      toast({ title: "Sucesso", description: "Ordem do repertório salva!" });
+    } catch (error: any) {
+      toast({ title: "Erro", description: error.message, variant: "destructive" });
+    } finally {
+      setDraggedItemIndex(null);
+    }
+  };
+
+  const handleDropOnSetlist = (e: React.DragEvent) => {
+      e.preventDefault();
+      const source = e.dataTransfer.getData("source");
+      if (source === "setlist") {
+        handleDragEndSetlist();
+      } else {
+        if (selectedShow) {
+            const songData = JSON.parse(e.dataTransfer.getData("application/json")) as Song;
+            handleAddSongToShow(songData, selectedShow.id);
+        }
+      }
+  }
 
   if (loading) { return ( <div className="flex justify-center items-center py-8"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div> ); }
 
@@ -175,12 +189,32 @@ export function ShowsGrid() {
                             <div className="text-center text-muted-foreground py-10">Arraste músicas da biblioteca ou use o botão "Adicionar Música".</div>
                         ) : (
                             selectedShow.songs.map((song, index) => (
-                                <Card key={song.id}><CardContent className="p-3 flex items-center justify-between"><div className="flex items-center gap-3"><span className="text-sm font-bold text-primary">{index + 1}</span><div><p className="font-semibold">{song.title}</p><p className="text-sm text-muted-foreground">{song.artist}</p></div></div><Button variant="ghost" size="sm" onClick={() => handleRemoveSongFromShow(song.id)} className="text-destructive hover:text-destructive"><X className="w-4 h-4" /></Button></CardContent></Card>
+                                <Card 
+                                  key={song.id} 
+                                  draggable={!isMobile}
+                                  onDragStart={(e) => handleDragStartSetlist(e, index)}
+                                  onDragEnter={(e) => handleDragEnterSetlist(e, index)}
+                                  onDragEnd={handleDragEndSetlist}
+                                  onDragOver={(e) => e.preventDefault()}
+                                  className={`transition-opacity ${draggedItemIndex === index ? 'opacity-50' : 'opacity-100'}`}
+                                >
+                                  <CardContent className="p-3 flex items-center justify-between cursor-grab active:cursor-grabbing">
+                                    <div className="flex items-center gap-3">
+                                      <GripVertical className="w-5 h-5 text-muted-foreground" />
+                                      <span className="text-sm font-bold text-primary">{index + 1}</span>
+                                      <div>
+                                        <p className="font-semibold">{song.title}</p>
+                                        <p className="text-sm text-muted-foreground">{song.artist}</p>
+                                      </div>
+                                    </div>
+                                    <Button variant="ghost" size="sm" onClick={() => handleRemoveSongFromShow(song.id)} className="text-destructive hover:text-destructive">
+                                      <X className="w-4 h-4" />
+                                    </Button>
+                                  </CardContent>
+                                </Card>
                             ))
                         )}
                     </div>
-                    
-                    {/* AQUI ESTÁ A LÓGICA CONDICIONAL */}
                     {isMobile && (
                       <div className="mt-4 flex-shrink-0">
                         <AddSongToShowMobileComponent 
@@ -191,7 +225,6 @@ export function ShowsGrid() {
                       </div>
                     )}
                 </div>
-
                 {!isMobile && (
                   <div className="flex flex-col min-h-0">
                       <h4 className="font-semibold mb-2 text-lg">Biblioteca</h4>
