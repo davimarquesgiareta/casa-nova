@@ -1,19 +1,27 @@
-import * as React from "react"
+// hooks/use-mobile.ts
+import { useState, useEffect } from "react"
 
 const MOBILE_BREAKPOINT = 768
 
 export function useIsMobile() {
-  const [isMobile, setIsMobile] = React.useState<boolean | undefined>(undefined)
+  // Começa como 'false' por padrão no servidor
+  const [isMobile, setIsMobile] = useState(false)
 
-  React.useEffect(() => {
-    const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`)
-    const onChange = () => {
+  useEffect(() => {
+    // Esta função só roda no cliente, onde 'window' existe
+    const checkDevice = () => {
       setIsMobile(window.innerWidth < MOBILE_BREAKPOINT)
     }
-    mql.addEventListener("change", onChange)
-    setIsMobile(window.innerWidth < MOBILE_BREAKPOINT)
-    return () => mql.removeEventListener("change", onChange)
-  }, [])
 
-  return !!isMobile
+    // Roda uma vez na montagem do componente no cliente
+    checkDevice()
+
+    // Adiciona o listener para futuras mudanças de tamanho
+    window.addEventListener("resize", checkDevice)
+
+    // Limpa o listener quando o componente é desmontado
+    return () => window.removeEventListener("resize", checkDevice)
+  }, []) // O array vazio [] garante que o useEffect rode apenas uma vez
+
+  return isMobile
 }
