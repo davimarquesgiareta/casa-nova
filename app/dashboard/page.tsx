@@ -6,6 +6,8 @@ import { DashboardHeader } from "@/components/dashboard-header"
 import { MusicLibrary } from "@/components/music-library"
 import { ShowsGrid } from "@/components/shows-grid"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { MusicStats } from "@/components/music-stats"
+import { ShowStats } from "@/components/show-stats"
 
 export default function DashboardPage() {
   const router = useRouter()
@@ -34,11 +36,13 @@ export default function DashboardPage() {
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="library" className="mt-0">
+          <TabsContent value="library" className="mt-0 space-y-6">
+            <MusicStats />
             <MusicLibrary />
           </TabsContent>
 
-          <TabsContent value="shows" className="mt-0">
+          <TabsContent value="shows" className="mt-0 space-y-6">
+            <ShowStats />
             <ShowsGrid />
           </TabsContent>
         </Tabs>
