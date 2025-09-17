@@ -57,7 +57,7 @@ export function SortableSongItem({ song, index, onRemove }: SortableSongItemProp
               <p className="text-sm text-muted-foreground">{song.artist}</p>
             </div>
           </div>
-          <Button variant="ghost" size="sm" onClick={() => onRemove(song.id)} className="text-destructive hover:text-destructive">
+          <Button variant="ghost" size="sm" onClick={() => onRemove(song.id)} className="text-destructive hover:bg-[#021c25] hover:text-white rounded-full">
             <X className="w-4 h-4" />
           </Button>
         </CardContent>

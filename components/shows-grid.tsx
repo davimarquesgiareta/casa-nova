@@ -306,10 +306,12 @@ export function ShowsGrid() {
                 <div className="flex items-center gap-4 text-sm text-muted-foreground pt-1"><div className="flex items-center gap-1.5"><Music className="w-4 h-4" /><span>{selectedShow?.songs.length || 0} músicas</span></div><div className="flex items-center gap-1.5"><Clock className="w-4 h-4" /><span>{calculateTotalDuration(selectedShow?.songs)}</span></div></div>
               </div>
               {selectedShow && selectedShow.songs.length > 0 && (
-                <Button variant="outline" size="sm" onClick={() => setIsWhatsAppModalOpen(true)}>
+                <div className="mr-8"> 
+                <Button size="sm" onClick={() => setIsWhatsAppModalOpen(true)} className="bg-[#25D366] text-white hover:bg-[#25D366] hover:opacity-90">
                   <MessageCircle className="w-4 h-4 mr-2" />
                   Enviar para o Zap
                 </Button>
+                </div>
               )}
             </div>
           </DialogHeader>
