@@ -1,4 +1,3 @@
-// components/shows-grid.tsx
 "use client"
 
 import type React from "react"
@@ -25,7 +24,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
-import { Plus, Folder, Music, Clock, Edit, Trash2, Eye, Loader2 } from "lucide-react"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Plus, Folder, Music, Clock, Edit, Trash2, Eye, Loader2, MessageCircle } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { MusicLibraryForShowComponent } from "./music-library-for-show"
@@ -55,6 +55,13 @@ type ShowDetails = Show & {
     songs: Song[];
 };
 
+const PRESET_CONTACTS = [
+  { name: "Ju Galvão", number: "19981664257" },
+  { name: "Pedro", number: "35997242550" },
+  { name: "Renan", number: "35999050667" },
+  { name: "Davi", number: "19989305698" },
+];
+
 export function ShowsGrid() {
   const isMobile = useIsMobile();
   const [shows, setShows] = useState<Show[]>([])
@@ -67,6 +74,9 @@ export function ShowsGrid() {
   const [dragOverShow, setDragOverShow] = useState<string | null>(null)
   const { toast } = useToast()
   const [formData, setFormData] = useState({ name: "", venue: "", event_date: "", show_time: "" });
+
+  const [isWhatsAppModalOpen, setIsWhatsAppModalOpen] = useState(false);
+  const [whatsappNumber, setWhatsappNumber] = useState("");
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -99,12 +109,91 @@ export function ShowsGrid() {
     fetchShows();
   }
 
-  const handleSubmit = async (e: React.FormEvent) => { e.preventDefault(); const url = editingShow ? `/api/shows/${editingShow.id}` : '/api/shows'; const method = editingShow ? 'PUT' : 'POST'; try { const response = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(formData) }); if (!response.ok) { const err = await response.json(); throw new Error(err.error); } toast({ title: "Sucesso", description: `Show ${editingShow ? 'atualizado' : 'criado'}!` }); setIsDialogOpen(false); resetForm(); fetchShows(); } catch (error: any) { toast({ title: "Erro", description: error.message, variant: "destructive" }); } };
-  const handleEdit = (show: Show) => { setEditingShow(show); setFormData({ name: show.name, venue: show.venue || "", event_date: show.event_date ? show.event_date.split('T')[0] : "", show_time: show.show_time || "" }); setIsDialogOpen(true); };
-  const handleDelete = async (showId: string) => { if (!confirm("Tem certeza que deseja excluir este show?")) return; try { const response = await fetch(`/api/shows/${showId}`, { method: 'DELETE' }); if (!response.ok) throw new Error('Erro ao deletar show'); toast({ title: "Sucesso", description: "Show excluído!" }); fetchShows(); } catch (error) { toast({ title: "Erro", description: "Não foi possível excluir.", variant: "destructive" }); } };
-  const handleViewShow = async (show: Show) => { try { const response = await fetch(`/api/shows/${show.id}/songs`); if(!response.ok) throw new Error('Erro ao buscar repertório'); const songsData = await response.json(); const fullShowDetails: ShowDetails = { ...show, songs: songsData }; setSelectedShow(fullShowDetails); setIsShowDetailOpen(true); } catch (error) { toast({ title: "Erro", description: "Não foi possível carregar detalhes.", variant: "destructive" }); } };
-  const handleAddSongToShow = async (song: Song, showId: string) => { if (!selectedShow) return; if (selectedShow.songs.find(s => s.id === song.id)) { toast({ title: "Aviso", description: "Essa música já está no repertório." }); return; } const optimisticSongs = [...selectedShow.songs, song]; setSelectedShow({ ...selectedShow, songs: optimisticSongs }); try { const response = await fetch(`/api/shows/${showId}/songs`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ song_id: song.id }) }); if(!response.ok) { setSelectedShow({ ...selectedShow, songs: selectedShow.songs }); const err = await response.json(); throw new Error(err.error); }; } catch (error: any) { toast({ title: "Erro ao salvar", description: error.message, variant: "destructive" }); setSelectedShow({ ...selectedShow, songs: selectedShow.songs }); } };
-  const handleRemoveSongFromShow = async (songId: string) => { if(!selectedShow) return; const originalSongs = selectedShow.songs; const optimisticSongs = originalSongs.filter(s => s.id !== songId); setSelectedShow({ ...selectedShow, songs: optimisticSongs }); try { const response = await fetch(`/api/shows/${selectedShow.id}/songs/${songId}`, { method: 'DELETE' }); if(!response.ok) { setSelectedShow({ ...selectedShow, songs: originalSongs }); throw new Error('Erro ao remover música'); } fetchShows(); } catch(error) { toast({ title: "Erro", description: "Não foi possível remover.", variant: "destructive" }); } };
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const url = editingShow ? `/api/shows/${editingShow.id}` : '/api/shows';
+    const method = editingShow ? 'PUT' : 'POST';
+    try {
+      const response = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(formData) });
+      if (!response.ok) { const err = await response.json(); throw new Error(err.error); }
+      toast({ title: "Sucesso", description: `Show ${editingShow ? 'atualizado' : 'criado'}!` });
+      setIsDialogOpen(false);
+      resetForm();
+      fetchShows();
+    } catch (error: any) {
+      toast({ title: "Erro", description: error.message, variant: "destructive" });
+    }
+  };
+
+  const handleEdit = (show: Show) => {
+    setEditingShow(show);
+    setFormData({ name: show.name, venue: show.venue || "", event_date: show.event_date ? show.event_date.split('T')[0] : "", show_time: show.show_time || "" });
+    setIsDialogOpen(true);
+  };
+
+  const handleDelete = async (showId: string) => {
+    if (!confirm("Tem certeza que deseja excluir este show?")) return;
+    try {
+      const response = await fetch(`/api/shows/${showId}`, { method: 'DELETE' });
+      if (!response.ok) throw new Error('Erro ao deletar show');
+      toast({ title: "Sucesso", description: "Show excluído!" });
+      fetchShows();
+    } catch (error) {
+      toast({ title: "Erro", description: "Não foi possível excluir.", variant: "destructive" });
+    }
+  };
+
+  const handleViewShow = async (show: Show) => {
+    try {
+      const response = await fetch(`/api/shows/${show.id}/songs`);
+      if(!response.ok) throw new Error('Erro ao buscar repertório');
+      const songsData = await response.json();
+      const fullShowDetails: ShowDetails = { ...show, songs: songsData };
+      setSelectedShow(fullShowDetails);
+      setIsShowDetailOpen(true);
+    } catch (error) {
+      toast({ title: "Erro", description: "Não foi possível carregar detalhes.", variant: "destructive" });
+    }
+  };
+
+  const handleAddSongToShow = async (song: Song, showId: string) => {
+    if (!selectedShow) return;
+    if (selectedShow.songs.find(s => s.id === song.id)) {
+      toast({ title: "Aviso", description: "Essa música já está no repertório." });
+      return;
+    }
+    const optimisticSongs = [...selectedShow.songs, song];
+    setSelectedShow({ ...selectedShow, songs: optimisticSongs });
+    try {
+      const response = await fetch(`/api/shows/${showId}/songs`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ song_id: song.id }) });
+      if(!response.ok) {
+        setSelectedShow({ ...selectedShow, songs: selectedShow.songs });
+        const err = await response.json();
+        throw new Error(err.error);
+      };
+    } catch (error: any) {
+      toast({ title: "Erro ao salvar", description: error.message, variant: "destructive" });
+      setSelectedShow({ ...selectedShow, songs: selectedShow.songs });
+    }
+  };
+
+  const handleRemoveSongFromShow = async (songId: string) => {
+    if(!selectedShow) return;
+    const originalSongs = selectedShow.songs;
+    const optimisticSongs = originalSongs.filter(s => s.id !== songId);
+    setSelectedShow({ ...selectedShow, songs: optimisticSongs });
+    try {
+      const response = await fetch(`/api/shows/${selectedShow.id}/songs/${songId}`, { method: 'DELETE' });
+      if(!response.ok) {
+        setSelectedShow({ ...selectedShow, songs: originalSongs });
+        throw new Error('Erro ao remover música');
+      }
+      fetchShows();
+    } catch(error) {
+      toast({ title: "Erro", description: "Não foi possível remover.", variant: "destructive" });
+    }
+  };
+
   const handleDragOver = (e: React.DragEvent, showId: string) => { e.preventDefault(); setDragOverShow(showId); };
   const handleDragLeave = (e: React.DragEvent) => { e.preventDefault(); setDragOverShow(null); };
   const handleDropOnCard = (e: React.DragEvent, showId: string) => { e.preventDefault(); setDragOverShow(null); const songData = JSON.parse(e.dataTransfer.getData("application/json")) as Song; fetch(`/api/shows/${showId}/songs`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ song_id: songData.id }) }).then(res => { if(res.ok) { toast({ title: "Música adicionada!", description: `"${songData.title}" adicionada a "${shows.find(s=>s.id===showId)?.name}".`}); fetchShows(); } else { toast({ title: "Erro", description: "Não foi possível adicionar a música.", variant: "destructive"}); } }); };
@@ -114,14 +203,11 @@ export function ShowsGrid() {
 
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
-
     if (over && active.id !== over.id && selectedShow) {
       const oldIndex = selectedShow.songs.findIndex(s => s.id === active.id);
       const newIndex = selectedShow.songs.findIndex(s => s.id === over.id);
-
       const newSongs = arrayMove(selectedShow.songs, oldIndex, newIndex);
       setSelectedShow({ ...selectedShow, songs: newSongs });
-
       const songIdsInNewOrder = newSongs.map(song => song.id);
       fetch(`/api/shows/${selectedShow.id}/songs/reorder`, {
         method: 'PUT',
@@ -147,6 +233,32 @@ export function ShowsGrid() {
             handleAddSongToShow(songData, selectedShow.id);
         }
       }
+  }
+
+  const handleSendToWhatsApp = () => {
+    if (!selectedShow) return;
+    if (!whatsappNumber.trim()) {
+      toast({ title: "Erro", description: "Por favor, insira ou selecione um número.", variant: "destructive" });
+      return;
+    }
+    const cleanNumber = `55${whatsappNumber.replace(/\D/g, "")}`;
+    let message = `*${selectedShow.name}* 🎵\n\n`;
+    if (selectedShow.venue) message += `*Local:* ${selectedShow.venue}\n`;
+    if (selectedShow.event_date) {
+        const date = new Date(selectedShow.event_date);
+        const formattedDate = new Intl.DateTimeFormat('pt-BR', { timeZone: 'UTC' }).format(date);
+        message += `*Data:* ${formattedDate}\n`;
+    }
+    if (selectedShow.show_time) message += `*Horário:* ${selectedShow.show_time}\n`;
+    message += `\n*REPERTÓRIO:*\n`;
+    selectedShow.songs.forEach((song, index) => {
+      message += `${index + 1}. ${song.title} - _${song.artist}_\n`;
+    });
+    const encodedMessage = encodeURIComponent(message);
+    const whatsappUrl = `https://wa.me/${cleanNumber}?text=${encodedMessage}`;
+    window.open(whatsappUrl, "_blank");
+    setIsWhatsAppModalOpen(false);
+    setWhatsappNumber("");
   }
 
   if (loading) { return ( <div className="flex justify-center items-center py-8"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div> ); }
@@ -188,8 +300,18 @@ export function ShowsGrid() {
       <Dialog open={isShowDetailOpen} onOpenChange={(isOpen) => !isOpen && handleCloseDetailModal()}>
         <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
           <DialogHeader>
-            <DialogTitle>{selectedShow?.name}</DialogTitle>
-            <div className="flex items-center gap-4 text-sm text-muted-foreground pt-1"><div className="flex items-center gap-1.5"><Music className="w-4 h-4" /><span>{selectedShow?.songs.length || 0} músicas</span></div><div className="flex items-center gap-1.5"><Clock className="w-4 h-4" /><span>{calculateTotalDuration(selectedShow?.songs)}</span></div></div>
+            <div className="flex justify-between items-start">
+              <div>
+                <DialogTitle>{selectedShow?.name}</DialogTitle>
+                <div className="flex items-center gap-4 text-sm text-muted-foreground pt-1"><div className="flex items-center gap-1.5"><Music className="w-4 h-4" /><span>{selectedShow?.songs.length || 0} músicas</span></div><div className="flex items-center gap-1.5"><Clock className="w-4 h-4" /><span>{calculateTotalDuration(selectedShow?.songs)}</span></div></div>
+              </div>
+              {selectedShow && selectedShow.songs.length > 0 && (
+                <Button variant="outline" size="sm" onClick={() => setIsWhatsAppModalOpen(true)}>
+                  <MessageCircle className="w-4 h-4 mr-2" />
+                  Enviar para o Zap
+                </Button>
+              )}
+            </div>
           </DialogHeader>
           {selectedShow && (
             <div className="grid lg:grid-cols-2 gap-6 flex-1 overflow-hidden">
@@ -208,7 +330,6 @@ export function ShowsGrid() {
                         </div>
                       </SortableContext>
                     </DndContext>
-                    
                     {isMobile && (
                       <div className="mt-4 flex-shrink-0">
                         <AddSongToShowMobileComponent 
@@ -227,6 +348,38 @@ export function ShowsGrid() {
                 )}
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isWhatsAppModalOpen} onOpenChange={setIsWhatsAppModalOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><MessageCircle className="w-5 h-5 text-green-500" />Enviar Repertório para WhatsApp</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="grid gap-2">
+              <Label htmlFor="whatsapp-contact">Contatos Salvos (opcional)</Label>
+              <Select onValueChange={(value) => setWhatsappNumber(value)}>
+                <SelectTrigger><SelectValue placeholder="Selecione um contato..." /></SelectTrigger>
+                <SelectContent>
+                  {PRESET_CONTACTS.map(contact => (
+                    <SelectItem key={contact.name} value={contact.number}>{contact.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="whatsapp-number">ou Digite o Número com DDD</Label>
+              <Input id="whatsapp-number" placeholder="Ex: 19989305698" type="tel" value={whatsappNumber} onChange={(e) => setWhatsappNumber(e.target.value)} />
+            </div>
+            <div className="bg-muted p-3 rounded-lg max-h-40 overflow-y-auto">
+              <p className="text-sm font-medium mb-2">Prévia da mensagem:</p>
+              <div className="text-xs text-muted-foreground space-y-1 whitespace-pre-wrap">
+                {`*${selectedShow?.name}* 🎵\n\n*REPERTÓRIO:*\n${selectedShow?.songs.slice(0, 3).map((s, i) => `${i+1}. ${s.title} - _${s.artist}_`).join('\n')}${selectedShow && selectedShow.songs.length > 3 ? '\n...' : ''}`}
+              </div>
+            </div>
+            <Button onClick={handleSendToWhatsApp} className="w-full">Enviar</Button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
