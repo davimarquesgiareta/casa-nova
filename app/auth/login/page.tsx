@@ -119,11 +119,11 @@ export default function Page() {
             </CardContent>
           </Card>
 
-          <div className="text-center text-xs text-music-500">
+          {/* <div className="text-center text-xs text-music-500">
             <p>
               Use: <strong>casanova</strong> / <strong>casanova</strong>
             </p>
-          </div>
+          </div> */}
         </div>
       </div>
     </div>

@@ -6,7 +6,8 @@ import { GeistMono } from "geist/font/mono"
 import { Analytics } from "@vercel/analytics/next"
 import { Toaster } from "@/components/ui/toaster"
 import { Suspense } from "react"
-import { ThemeProvider } from "@/components/theme-provider" // 1. IMPORTE AQUI
+import { ThemeProvider } from "@/components/theme-provider"
+import { Footer } from "@/components/footer"; // 1. IMPORTE AQUI
 import "./globals.css"
 
 export const metadata: Metadata = {
@@ -22,18 +23,23 @@ export default function RootLayout({
   return (
     <html lang="pt-BR" suppressHydrationWarning>
       <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable}`}>
-        {/* 2. ADICIONE O THEME PROVIDER AQUI */}
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
           enableSystem
           disableTransitionOnChange
         >
-          <Suspense fallback={null}>
-            {children}
-            <Toaster />
-          </Suspense>
-          <Analytics />
+          {/* 2. Reestruturamos para o "sticky footer" */}
+          <div className="flex flex-col min-h-screen">
+            <main className="flex-grow">
+              <Suspense fallback={null}>
+                {children}
+                <Toaster />
+              </Suspense>
+              <Analytics />
+            </main>
+            <Footer /> {/* 3. ADICIONAMOS O RODAPÉ AQUI */}
+          </div>
         </ThemeProvider>
       </body>
     </html>

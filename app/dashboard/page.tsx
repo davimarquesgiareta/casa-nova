@@ -20,7 +20,8 @@ export default function DashboardPage() {
   }, [router])
 
   return (
-    <div className="min-h-screen bg-background">
+    // MUDANÇA: Removemos a classe "min-h-screen" daqui
+    <div className="bg-background">
       <DashboardHeader />
 
       <main className="container mx-auto px-4 py-6">
