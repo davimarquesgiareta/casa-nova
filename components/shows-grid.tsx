@@ -350,11 +350,91 @@ export function ShowsGrid() {
       )}
       
       <Dialog open={isShowDetailOpen} onOpenChange={(isOpen) => !isOpen && handleCloseDetailModal()}>
-        {/* ... Conteúdo do modal de detalhes do show ... */}
+        <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <div className="flex justify-between items-start">
+              <div>
+                <DialogTitle>{selectedShow?.name}</DialogTitle>
+                <div className="flex items-center gap-4 text-sm text-muted-foreground pt-1"><div className="flex items-center gap-1.5"><Music className="w-4 h-4" /><span>{selectedShow?.songs.length || 0} músicas</span></div><div className="flex items-center gap-1.5"><Clock className="w-4 h-4" /><span>{calculateTotalDuration(selectedShow?.songs)}</span></div></div>
+              </div>
+              {selectedShow && selectedShow.songs.length > 0 && (
+                <div className="mr-5">
+                <Button size="sm" onClick={() => setIsWhatsAppModalOpen(true)} className="bg-[#1b9648] text-white hover:bg-[#25d365d8] hover:opacity-90">
+                  <MessageCircle className="w-4 h-4 mr-2" />
+                  Enviar para o Zap
+                </Button>
+                </div>
+              )}
+            </div>
+          </DialogHeader>
+          {selectedShow && (
+            <div className="grid lg:grid-cols-2 gap-6 flex-1 overflow-hidden">
+                <div className="flex flex-col min-h-0">
+                    <h4 className="font-semibold mb-2 text-lg">Repertório</h4>
+                    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                      <SortableContext items={selectedShow.songs.map(s => s.id)} strategy={verticalListSortingStrategy}>
+                        <div className="flex-1 overflow-y-auto space-y-2 pr-2 border-2 border-dashed border-transparent rounded-lg" onDragOver={(e) => e.preventDefault()} onDrop={handleDropOnSetlist}>
+                            {selectedShow.songs.length === 0 ? (
+                                <div className="text-center text-muted-foreground py-10">Arraste músicas ou use o botão "Adicionar".</div>
+                            ) : (
+                                selectedShow.songs.map((song, index) => (
+                                  <SortableSongItem key={song.id} song={song} index={index} onRemove={handleRemoveSongFromShow} />
+                                ))
+                            )}
+                        </div>
+                      </SortableContext>
+                    </DndContext>
+                    {isMobile && (
+                      <div className="mt-4 flex-shrink-0">
+                        <AddSongToShowMobileComponent 
+                          showId={selectedShow.id} 
+                          songsInShow={selectedShow.songs}
+                          onSongAdded={() => handleViewShow(selectedShow)}
+                        />
+                      </div>
+                    )}
+                </div>
+                {!isMobile && (
+                  <div className="flex flex-col min-h-0">
+                      <h4 className="font-semibold mb-2 text-lg">Biblioteca</h4>
+                      <MusicLibraryForShowComponent onAddSong={(song) => handleAddSongToShow(song, selectedShow.id)} showSongs={selectedShow.songs} />
+                  </div>
+                )}
+            </div>
+          )}
+        </DialogContent>
       </Dialog>
 
       <Dialog open={isWhatsAppModalOpen} onOpenChange={setIsWhatsAppModalOpen}>
-        {/* ... Conteúdo do modal do WhatsApp ... */}
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><MessageCircle className="w-5 h-5 text-green-500" />Enviar Repertório para WhatsApp</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="grid gap-2">
+              <Label htmlFor="whatsapp-contact">Contatos Salvos (opcional)</Label>
+              <Select onValueChange={(value) => setWhatsappNumber(value)}>
+                <SelectTrigger><SelectValue placeholder="Selecione um contato..." /></SelectTrigger>
+                <SelectContent>
+                  {PRESET_CONTACTS.map(contact => (
+                    <SelectItem key={contact.name} value={contact.number}>{contact.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="whatsapp-number">ou Digite o Número com DDD</Label>
+              <Input id="whatsapp-number" placeholder="Ex: 19989305698" type="tel" value={whatsappNumber} onChange={(e) => setWhatsappNumber(e.target.value)} />
+            </div>
+            <div className="bg-muted p-3 rounded-lg max-h-40 overflow-y-auto">
+              <p className="text-sm font-medium mb-2">Prévia da mensagem:</p>
+              <div className="text-xs text-muted-foreground space-y-1 whitespace-pre-wrap">
+                {`*${selectedShow?.name}* 🎵\n\n*REPERTÓRIO:*\n${selectedShow?.songs.slice(0, 3).map((s, i) => `${i+1}. ${s.title} - _${s.artist}_`).join('\n')}${selectedShow && selectedShow.songs.length > 3 ? '\n...' : ''}`}
+              </div>
+            </div>
+            <Button onClick={handleSendToWhatsApp} className="w-full">Enviar</Button>
+          </div>
+        </DialogContent>
       </Dialog>
       
       <AlertDialog open={!!showToClone} onOpenChange={(isOpen) => !isOpen && setShowToClone(null)}>
