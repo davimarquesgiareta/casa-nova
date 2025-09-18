@@ -35,7 +35,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Folder, Music, Clock, Edit, Trash2, Eye, Loader2, MessageCircle, Copy } from "lucide-react"
+import { Plus, Folder, Music, Clock, Edit, Trash2, Eye, Loader2, MessageCircle, Copy, Printer } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { MusicLibraryForShowComponent } from "./music-library-for-show"
@@ -301,6 +301,51 @@ export function ShowsGrid() {
     setWhatsappNumber("");
   }
 
+  // MUDANÇA PRINCIPAL: A nova função de impressão
+  const handlePrint = () => {
+    if (!selectedShow) return;
+
+    // 1. Monta o conteúdo HTML como uma string
+    const formattedDate = selectedShow.event_date ? new Intl.DateTimeFormat('pt-BR', { timeZone: 'UTC' }).format(new Date(selectedShow.event_date)) : null;
+    let printContent = `
+      <style>
+        body { font-family: sans-serif; margin: 2rem; }
+        h1 { font-size: 24px; margin-bottom: 4px; }
+        p { margin: 2px 0; font-size: 16px; color: #333; }
+        .details { margin-bottom: 24px; }
+        .song-list p { margin-bottom: 8px; }
+      </style>
+      <h1>${selectedShow.name}</h1>
+      <div class="details">
+    `;
+    if (selectedShow.venue) {
+      printContent += `<p>${selectedShow.venue}</p>`;
+    }
+    if (formattedDate || selectedShow.show_time) {
+      printContent += `<p>${formattedDate ? `Data: ${formattedDate}` : ''}${formattedDate && selectedShow.show_time ? ' | ' : ''}${selectedShow.show_time ? `Horário: ${selectedShow.show_time}` : ''}</p>`;
+    }
+    printContent += '</div><hr><div class="song-list" style="margin-top: 24px;">';
+    selectedShow.songs.forEach((song, index) => {
+      printContent += `<p>${index + 1}. ${song.title} - ${song.artist}</p>`;
+    });
+    printContent += '</div>';
+
+    // 2. Abre uma nova janela
+    const printWindow = window.open('', '', 'height=600,width=800');
+    
+    // 3. Escreve o HTML e aciona a impressão
+    if (printWindow) {
+      printWindow.document.write('<html><head><title>Imprimir Repertório</title></head><body>');
+      printWindow.document.write(printContent);
+      printWindow.document.write('</body></html>');
+      printWindow.document.close();
+      printWindow.focus();
+      printWindow.print();
+      printWindow.close();
+    }
+  };
+
+
   if (loading) { return ( <div className="flex justify-center items-center py-8"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div> ); }
 
   return (
@@ -358,11 +403,17 @@ export function ShowsGrid() {
                 <div className="flex items-center gap-4 text-sm text-muted-foreground pt-1"><div className="flex items-center gap-1.5"><Music className="w-4 h-4" /><span>{selectedShow?.songs.length || 0} músicas</span></div><div className="flex items-center gap-1.5"><Clock className="w-4 h-4" /><span>{calculateTotalDuration(selectedShow?.songs)}</span></div></div>
               </div>
               {selectedShow && selectedShow.songs.length > 0 && (
-                <div className="mr-5">
-                <Button size="sm" onClick={() => setIsWhatsAppModalOpen(true)} className="bg-[#1b9648] text-white hover:bg-[#25d365d8] hover:opacity-90">
-                  <MessageCircle className="w-4 h-4 mr-2" />
-                  Enviar para o Zap
-                </Button>
+                <div className="flex items-center gap-2">
+                  <Button className="hover:bg-[#021c25]" variant="outline" size="sm" onClick={handlePrint}>
+                    <Printer className="w-4 h-4 mr-2" />
+                    Imprimir
+                  </Button>
+                  <div className="mr-4">
+                    <Button size="sm" onClick={() => setIsWhatsAppModalOpen(true)} className="bg-[#25D366] text-white hover:bg-[#25D366] hover:opacity-90">
+                      <MessageCircle className="w-4 h-4 mr-2" />
+                      Enviar para o Zap
+                    </Button>
+                  </div>
                 </div>
               )}
             </div>
