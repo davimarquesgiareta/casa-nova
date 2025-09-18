@@ -23,7 +23,7 @@ export default function Page() {
     setError(null)
 
     try {
-      if (usuario === "casanova" && senha === "casanova") {
+      if (usuario === "davi" && senha === "casanova") {
         // const supabase = createClient()
 
         // Criar sessão fictícia para o usuário casanova
