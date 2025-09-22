@@ -1,12 +1,11 @@
-// components/dashboard-header.tsx
 "use client"
 
 import { Button } from "@/components/ui/button"
 import { Home, LogOut, Menu, Music } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { useState } from "react"
-import { ThemeToggle } from "./theme-toggle" // 1. IMPORTE AQUI
+import { ThemeToggle } from "./theme-toggle"
 
 export function DashboardHeader() {
   const router = useRouter()
@@ -15,7 +14,7 @@ export function DashboardHeader() {
   const handleSignOut = async () => {
     localStorage.removeItem("casa-nova-auth")
     router.push("/")
-    setIsSheetOpen(false)
+    setIsSheetOpen(false) // Garante que o menu feche ao sair
   }
 
   return (
@@ -32,7 +31,7 @@ export function DashboardHeader() {
         {/* Desktop Navigation */}
         <div className="hidden sm:flex items-center gap-4">
           <span className="text-sm text-muted-foreground">Bem-vindo, Casa Nova!</span>
-          <ThemeToggle /> {/* 2. ADICIONE AQUI */}
+          <ThemeToggle />
           <Button variant="outline" size="sm" onClick={handleSignOut}>
             <LogOut className="w-4 h-4 mr-2" />
             Sair
@@ -42,7 +41,7 @@ export function DashboardHeader() {
         {/* Mobile Navigation */}
         <div className="sm:hidden">
            <div className="flex items-center gap-2">
-            <ThemeToggle /> {/* 2. ADICIONE AQUI TAMBÉM */}
+            <ThemeToggle />
             <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
               <SheetTrigger asChild>
                 <Button variant="ghost" size="icon">
@@ -50,7 +49,21 @@ export function DashboardHeader() {
                 </Button>
               </SheetTrigger>
               <SheetContent side="right" className="w-[280px]">
-                {/* ... (o conteúdo do menu mobile continua o mesmo) ... */}
+                <SheetHeader>
+                    <SheetTitle>Menu</SheetTitle>
+                </SheetHeader>
+                {/* MUDANÇA: Adicionamos o conteúdo ao menu mobile */}
+                <div className="flex flex-col justify-between h-[calc(100%-2rem)] py-6">
+                    <div className="p-3 bg-muted rounded-lg">
+                      <p className="text-sm text-muted-foreground">Logado como:</p>
+                      <p className="text-sm font-medium">Casa Nova</p>
+                    </div>
+
+                    <Button variant="outline" className="w-full justify-center" onClick={handleSignOut}>
+                        <LogOut className="w-4 h-4 mr-2" />
+                        Sair da Conta
+                    </Button>
+                </div>
               </SheetContent>
             </Sheet>
            </div>

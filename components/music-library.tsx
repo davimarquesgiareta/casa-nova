@@ -46,7 +46,6 @@ export function MusicLibrary() {
   const [searchTerm, setSearchTerm] = useState("");
   const { toast } = useToast();
 
-  // MUDANÇA 1: Os campos numéricos agora iniciam como string vazia
   const [formData, setFormData] = useState({
     title: "",
     artist: "",
@@ -84,8 +83,6 @@ export function MusicLibrary() {
     const url = editingSong ? `/api/songs/${editingSong.id}` : "/api/songs";
     const method = editingSong ? "PUT" : "POST";
 
-    // MUDANÇA 2: Convertemos os valores para número apenas na hora de enviar,
-    // tratando campos vazios como nulos (ou 0).
     const durationInSeconds =
       (Number(formData.duration_minutes) || 0) * 60 +
       (Number(formData.duration_seconds) || 0);
@@ -94,7 +91,7 @@ export function MusicLibrary() {
       title: formData.title,
       artist: formData.artist,
       tone: formData.tone,
-      bpm: Number(formData.bpm) || null, // Se for vazio, envia null para o banco
+      bpm: Number(formData.bpm) || null,
       duration: durationInSeconds || null,
     };
 
@@ -128,7 +125,6 @@ export function MusicLibrary() {
 
   const handleEdit = (song: Song) => {
     setEditingSong(song);
-    // MUDANÇA 3: Preenchemos o formulário convertendo os números para string
     setFormData({
       title: song.title,
       artist: song.artist,
@@ -141,7 +137,6 @@ export function MusicLibrary() {
   };
 
   const handleDelete = async (songId: string) => {
-    // Usamos o AlertDialog no shows-grid para consistência, mas o confirm() ainda é funcional.
     if (!confirm("Tem certeza que deseja excluir esta música?")) return;
     try {
       const response = await fetch(`/api/songs/${songId}`, {
@@ -226,65 +221,22 @@ export function MusicLibrary() {
               Adicionar Música
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-md mx-4">
+          <DialogContent className="w-[90vw] max-w-md">
             <DialogHeader>
               <DialogTitle>
                 {editingSong ? "Editar Música" : "Adicionar Nova Música"}
               </DialogTitle>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid gap-2">
-                <Label htmlFor="title">Nome da Música</Label>
-                <Input id="title" value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} required className="h-12" />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="artist">Artista</Label>
-                <Input id="artist" value={formData.artist} onChange={(e) => setFormData({ ...formData, artist: e.target.value })} className="h-12" />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="tone">Tom</Label>
-                <Input id="tone" placeholder="Ex: C, Am, F#" value={formData.tone} onChange={(e) => setFormData({ ...formData, tone: e.target.value })} className="h-12" />
-              </div>
+              <div className="grid gap-2"><Label htmlFor="title">Nome da Música</Label><Input id="title" value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} required className="h-12" /></div>
+              <div className="grid gap-2"><Label htmlFor="artist">Artista</Label><Input id="artist" value={formData.artist} onChange={(e) => setFormData({ ...formData, artist: e.target.value })} className="h-12" /></div>
+              <div className="grid gap-2"><Label htmlFor="tone">Tom</Label><Input id="tone" placeholder="Ex: C, Am, F#" value={formData.tone} onChange={(e) => setFormData({ ...formData, tone: e.target.value })} className="h-12" /></div>
               <div className="grid grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="duration_minutes">Minutos</Label>
-                  <Input
-                    id="duration_minutes"
-                    type="number"
-                    min="0"
-                    placeholder="Ex: 3"
-                    value={formData.duration_minutes}
-                    // MUDANÇA 4: onChange agora salva a string diretamente
-                    onChange={(e) => setFormData({ ...formData, duration_minutes: e.target.value })}
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="duration_seconds">Segundos</Label>
-                  <Input
-                    id="duration_seconds"
-                    type="number"
-                    min="0"
-                    max="59"
-                    placeholder="Ex: 45"
-                    value={formData.duration_seconds}
-                    onChange={(e) => setFormData({ ...formData, duration_seconds: e.target.value })}
-                  />
-                </div>
+                <div className="grid gap-2"><Label htmlFor="duration_minutes">Minutos</Label><Input id="duration_minutes" type="number" min="0" placeholder="Ex: 3" value={formData.duration_minutes} onChange={(e) => setFormData({ ...formData, duration_minutes: e.target.value })} /></div>
+                <div className="grid gap-2"><Label htmlFor="duration_seconds">Segundos</Label><Input id="duration_seconds" type="number" min="0" max="59" placeholder="Ex: 45" value={formData.duration_seconds} onChange={(e) => setFormData({ ...formData, duration_seconds: e.target.value })} /></div>
               </div>
-              <div className="grid gap-2">
-                <Label htmlFor="bpm">BPM (opcional)</Label>
-                <Input
-                  id="bpm"
-                  type="number"
-                  min="1"
-                  placeholder="Ex: 128"
-                  value={formData.bpm}
-                  onChange={(e) => setFormData({ ...formData, bpm: e.target.value })}
-                />
-              </div>
-              <Button type="submit" className="w-full h-12">
-                {editingSong ? "Atualizar" : "Adicionar"} Música
-              </Button>
+              <div className="grid gap-2"><Label htmlFor="bpm">BPM (opcional)</Label><Input id="bpm" type="number" min="1" placeholder="Ex: 128" value={formData.bpm} onChange={(e) => setFormData({ ...formData, bpm: e.target.value })} /></div>
+              <Button type="submit" className="w-full h-12">{editingSong ? "Atualizar" : "Adicionar"} Música</Button>
             </form>
           </DialogContent>
         </Dialog>
@@ -299,21 +251,48 @@ export function MusicLibrary() {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {filteredSongs.map((song) => (
-            <Card key={song.id} className={`hover:shadow-md transition-all cursor-grab active:cursor-grabbing ${ draggedSong?.id === song.id ? "opacity-50" : "" }`} draggable onDragStart={(e) => handleDragStart(e, song)} onDragEnd={handleDragEnd}>
+            <Card
+              key={song.id}
+              className={`hover:shadow-md transition-all cursor-grab active:cursor-grabbing ${
+                draggedSong?.id === song.id ? "opacity-50" : ""
+              }`}
+              draggable
+              onDragStart={(e) => handleDragStart(e, song)}
+              onDragEnd={handleDragEnd}
+            >
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">
                   <div className="flex items-start gap-2 flex-1 min-w-0">
                     <GripVertical className="w-4 h-4 text-muted-foreground mt-1 flex-shrink-0" />
                     <div className="flex-1 min-w-0">
-                      <CardTitle className="text-lg truncate">{song.title}</CardTitle>
-                      <p className="text-sm text-muted-foreground truncate">{song.artist || "Artista não informado"}</p>
+
+                      {/* MUDANÇA: A classe "truncate" foi removida daqui */}
+                      <CardTitle className="text-lg">
+                        {song.title}
+                      </CardTitle>
+
+                      {/* MUDANÇA: E daqui também */}
+                      <p className="text-sm text-muted-foreground">
+                        {song.artist || "Artista não informado"}
+                      </p>
+                      
                     </div>
                   </div>
                   <div className="flex gap-1 ml-2">
-                    <Button variant="ghost" size="sm" onClick={() => handleEdit(song)} className="h-9 w-9 p-0">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleEdit(song)}
+                      className="h-9 w-9 p-0"
+                    >
                       <Edit className="w-4 h-4" />
                     </Button>
-                    <Button variant="ghost" size="sm" onClick={() => handleDelete(song.id)} className="h-9 w-9 p-0 text-destructive hover:bg-[#021c25]">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleDelete(song.id)}
+                      className="h-9 w-9 p-0 text-destructive hover:bg-[#021c25] hover:text-white rounded-full"
+                    >
                       <Trash2 className="w-4 h-4" />
                     </Button>
                   </div>
