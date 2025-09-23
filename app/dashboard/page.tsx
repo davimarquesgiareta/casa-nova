@@ -12,12 +12,10 @@ import { ShowStats } from "@/components/show-stats"
 export default function DashboardPage() {
   const router = useRouter()
   
-  // 1. Criamos o estado que servirá de "gatilho" para a atualização
   const [statsRefetchTrigger, setStatsRefetchTrigger] = useState(0);
 
-  // 2. Esta função irá atualizar o gatilho, forçando a atualização das estatísticas
   const handleDataChange = () => {
-    setStatsRefetchTrigger(prev => prev + 1); // Apenas incrementa o número
+    setStatsRefetchTrigger(prev => prev + 1);
   };
 
   useEffect(() => {
@@ -44,13 +42,11 @@ export default function DashboardPage() {
           </TabsList>
 
           <TabsContent value="library" className="mt-0 space-y-6">
-            {/* 3. Passamos o gatilho e a função de aviso como props */}
             <MusicStats refetchTrigger={statsRefetchTrigger} />
             <MusicLibrary onDataChange={handleDataChange} />
           </TabsContent>
 
           <TabsContent value="shows" className="mt-0 space-y-6">
-            {/* 3. Passamos o gatilho e a função de aviso como props */}
             <ShowStats refetchTrigger={statsRefetchTrigger} />
             <ShowsGrid onDataChange={handleDataChange} />
           </TabsContent>

@@ -17,24 +17,53 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { Badge } from "@/components/ui/badge";
+
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
+import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Folder, Music, Clock, Edit, Trash2, Eye, Loader2, MessageCircle, Copy, Printer } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { MusicLibraryForShowComponent } from "./music-library-for-show";
-import { AddSongToShowMobileComponent } from "./add-song-to-show-mobile";
+import { Plus, Folder, Music, Clock, Edit, Trash2, Eye, Loader2, MessageCircle, Copy, Printer } from "lucide-react"
+import { useToast } from "@/components/ui/use-toast"
+import { useIsMobile } from "@/hooks/use-mobile"
+import { MusicLibraryForShowComponent } from "./music-library-for-show"
+import { AddSongToShowMobileComponent } from "./add-song-to-show-mobile"
 import { SortableSongItem } from "./sortable-song-item";
 
-type Song = { id: string; title: string; artist: string; tone: string; duration?: number; bpm?: number;};
-type Show = { id: string; name: string; event_date: string; venue: string; show_time?: string; created_at: string; song_count: number;};
-type ShowDetails = Show & { songs: Song[]; };
+type Song = {
+  id: string;
+  title: string;
+  artist: string;
+  tone: string;
+  duration?: number;
+  bpm?: number;
+};
+
+type Show = {
+    id: string;
+    name: string;
+    event_date: string;
+    venue: string;
+    show_time?: string;
+    created_at: string;
+    song_count: number;
+};
+
+type ShowDetails = Show & {
+    songs: Song[];
+};
 
 interface ShowsGridProps {
   onDataChange: () => void;
@@ -145,8 +174,8 @@ export function ShowsGrid({ onDataChange }: ShowsGridProps) {
     let printContent = `
       <style>
         body { font-family: sans-serif; margin: 2rem; }
-        h1 { font-size: 28px; text-align: center; margin-bottom: 8px; }
-        .details { text-align: center; font-size: 16px; color: #555; margin-bottom: 24px; border-bottom: 1px solid #ccc; padding-bottom: 16px;}
+        h1 { font-size: 24px; font-weight: bold; margin-bottom: 8px; text-align: center; }
+        .details { text-align: center; font-size: 16px; color: #555; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid #ccc;}
         .song-list { margin-top: 24px; }
         .song-list p { font-size: 16px; margin: 0 0 10px 0; }
       </style>
@@ -195,7 +224,7 @@ export function ShowsGrid({ onDataChange }: ShowsGridProps) {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row gap-4 items-center">
+       <div className="flex flex-col sm:flex-row gap-4 items-center">
         <Input placeholder="Buscar shows..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="h-12 flex-1"/>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild><Button onClick={() => { resetForm(); setEditingShow(null); }} className="h-12 w-full sm:w-auto"><Plus className="w-4 h-4 mr-2" />Criar Show</Button></DialogTrigger>
@@ -256,10 +285,12 @@ export function ShowsGrid({ onDataChange }: ShowsGridProps) {
                     <Printer className="w-4 h-4 mr-2" />
                     Imprimir
                   </Button>
+                  <div className="mr-5">
                   <Button size="sm" onClick={() => setIsWhatsAppModalOpen(true)} className="bg-[#1b9648] text-white hover:bg-[#25d365d8] hover:opacity-90 w-full sm:w-auto">
                     <MessageCircle className="w-4 h-4 mr-2" />
                     Enviar para o Zap
                   </Button>
+                  </div>
                 </div>
               )}
             </div>
