@@ -57,7 +57,7 @@ export function MusicStats({ refetchTrigger }: MusicStatsProps) {
   }
 
   if (!stats || stats.total_songs === 0) {
-    return null;
+    return null; 
   }
 
   return (

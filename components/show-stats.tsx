@@ -18,7 +18,6 @@ type ShowStatsData = {
   top_songs: TopSong[];
 };
 
-// 1. O componente agora espera receber a prop 'refetchTrigger'
 interface ShowStatsProps {
   refetchTrigger: number;
 }
@@ -27,7 +26,6 @@ export function ShowStats({ refetchTrigger }: ShowStatsProps) {
   const [stats, setStats] = useState<ShowStatsData | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // 2. O useEffect agora depende do 'refetchTrigger'.
   useEffect(() => {
     const fetchStats = async () => {
       try {
@@ -54,7 +52,7 @@ export function ShowStats({ refetchTrigger }: ShowStatsProps) {
   }
 
   if (!stats || stats.total_shows === 0) {
-    return null; 
+    return null;
   }
 
   return (

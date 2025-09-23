@@ -100,7 +100,7 @@ export function MusicLibrary({ onDataChange }: MusicLibraryProps) {
     const durationInSeconds = (Number(formData.duration_minutes) || 0) * 60 + (Number(formData.duration_seconds) || 0);
     const submissionData = { title: formData.title, artist: formData.artist, tone: formData.tone, bpm: Number(formData.bpm) || null, duration: durationInSeconds || null, };
     try {
-      const response = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(submissionData), });
+      const response = await fetch(url, { method: method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(submissionData), });
       if (!response.ok) { const errorData = await response.json(); throw new Error(errorData.error || "Erro ao salvar música"); }
       toast({ title: "Sucesso", description: `Música ${editingSong ? "atualizada" : "adicionada"}!`, });
       setIsDialogOpen(false);
@@ -124,7 +124,7 @@ export function MusicLibrary({ onDataChange }: MusicLibraryProps) {
     });
     setIsDialogOpen(true);
   };
-
+  
   const executeDelete = async () => {
     if (!songToDelete) return;
     try {
@@ -145,7 +145,7 @@ export function MusicLibrary({ onDataChange }: MusicLibraryProps) {
       setSongToDelete(null);
     }
   };
-
+  
   const handleDragStart = (e: React.DragEvent, song: Song) => {
     setDraggedSong(song);
     e.dataTransfer.setData("application/json", JSON.stringify(song));
