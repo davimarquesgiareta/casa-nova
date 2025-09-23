@@ -17,53 +17,24 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
-
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
-import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Folder, Music, Clock, Edit, Trash2, Eye, Loader2, MessageCircle, Copy, Printer } from "lucide-react"
-import { useToast } from "@/components/ui/use-toast"
-import { useIsMobile } from "@/hooks/use-mobile"
-import { MusicLibraryForShowComponent } from "./music-library-for-show"
-import { AddSongToShowMobileComponent } from "./add-song-to-show-mobile"
+import { Plus, Folder, Music, Clock, Edit, Trash2, Eye, Loader2, MessageCircle, Copy, Printer } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { MusicLibraryForShowComponent } from "./music-library-for-show";
+import { AddSongToShowMobileComponent } from "./add-song-to-show-mobile";
 import { SortableSongItem } from "./sortable-song-item";
 
-type Song = {
-  id: string;
-  title: string;
-  artist: string;
-  tone: string;
-  duration?: number;
-  bpm?: number;
-};
-
-type Show = {
-    id: string;
-    name: string;
-    event_date: string;
-    venue: string;
-    show_time?: string;
-    created_at: string;
-    song_count: number;
-};
-
-type ShowDetails = Show & {
-    songs: Song[];
-};
+type Song = { id: string; title: string; artist: string; tone: string; duration?: number; bpm?: number;};
+type Show = { id: string; name: string; event_date: string; venue: string; show_time?: string; created_at: string; song_count: number;};
+type ShowDetails = Show & { songs: Song[]; };
 
 interface ShowsGridProps {
   onDataChange: () => void;
@@ -165,7 +136,6 @@ export function ShowsGrid({ onDataChange }: ShowsGridProps) {
   function handleDragEnd(event: DragEndEvent) { const { active, over } = event; if (over && active.id !== over.id && selectedShow) { const oldIndex = selectedShow.songs.findIndex(s => s.id === active.id); const newIndex = selectedShow.songs.findIndex(s => s.id === over.id); const newSongs = arrayMove(selectedShow.songs, oldIndex, newIndex); setSelectedShow({ ...selectedShow, songs: newSongs }); const songIdsInNewOrder = newSongs.map(song => song.id); fetch(`/api/shows/${selectedShow.id}/songs/reorder`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ songIds: songIdsInNewOrder }), }).then(res => { if (res.ok) { toast({ title: "Sucesso", description: "Ordem do repertório salva!" }); } else { throw new Error("Falha ao salvar a nova ordem."); } }).catch(err => { toast({ title: "Erro", description: err.message, variant: "destructive" }); setSelectedShow({ ...selectedShow, songs: selectedShow.songs }); }); } }
   const handleDropOnSetlist = (e: React.DragEvent) => { e.preventDefault(); const source = e.dataTransfer.getData("source"); if (source !== "setlist") { if (selectedShow) { const songData = JSON.parse(e.dataTransfer.getData("application/json")) as Song; handleAddSongToShow(songData, selectedShow.id); } } }
   const handleSendToWhatsApp = () => { if (!selectedShow) return; if (!whatsappNumber.trim()) { toast({ title: "Erro", description: "Por favor, insira ou selecione um número.", variant: "destructive" }); return; } const cleanNumber = `55${whatsappNumber.replace(/\D/g, "")}`; let message = `*${selectedShow.name}* 🎵\n\n`; if (selectedShow.venue) message += `*Local:* ${selectedShow.venue}\n`; if (selectedShow.event_date) { const date = new Date(selectedShow.event_date); const formattedDate = new Intl.DateTimeFormat('pt-BR', { timeZone: 'UTC' }).format(date); message += `*Data:* ${formattedDate}\n`; } if (selectedShow.show_time) message += `*Horário:* ${selectedShow.show_time}\n`; message += `\n*REPERTÓRIO:*\n`; selectedShow.songs.forEach((song, index) => { message += `${index + 1}. ${song.title} - _${song.artist}_\n`; }); const encodedMessage = encodeURIComponent(message); const whatsappUrl = `https://wa.me/${cleanNumber}?text=${encodedMessage}`; window.open(whatsappUrl, "_blank"); setIsWhatsAppModalOpen(false); setWhatsappNumber(""); }
-  
   const handlePrint = () => {
     if (!selectedShow) return;
 
@@ -174,7 +144,7 @@ export function ShowsGrid({ onDataChange }: ShowsGridProps) {
     let printContent = `
       <style>
         body { font-family: sans-serif; margin: 2rem; }
-        h1 { font-size: 24px; font-weight: bold; margin-bottom: 8px; text-align: center; }
+        h1 { font-size: 28px; text-align: center; margin-bottom: 8px; }
         .details { text-align: center; font-size: 16px; color: #555; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid #ccc;}
         .song-list { margin-top: 24px; }
         .song-list p { font-size: 16px; margin: 0 0 10px 0; }
@@ -285,12 +255,10 @@ export function ShowsGrid({ onDataChange }: ShowsGridProps) {
                     <Printer className="w-4 h-4 mr-2" />
                     Imprimir
                   </Button>
-                  <div className="mr-5">
                   <Button size="sm" onClick={() => setIsWhatsAppModalOpen(true)} className="bg-[#1b9648] text-white hover:bg-[#25d365d8] hover:opacity-90 w-full sm:w-auto">
                     <MessageCircle className="w-4 h-4 mr-2" />
                     Enviar para o Zap
                   </Button>
-                  </div>
                 </div>
               )}
             </div>

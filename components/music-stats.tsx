@@ -12,6 +12,7 @@ type MusicStatsData = {
   most_frequent_tone: string;
 };
 
+// 1. O componente agora espera receber a prop 'refetchTrigger'
 interface MusicStatsProps {
   refetchTrigger: number;
 }
@@ -31,6 +32,8 @@ export function MusicStats({ refetchTrigger }: MusicStatsProps) {
   const [stats, setStats] = useState<MusicStatsData | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // 2. O useEffect agora depende do 'refetchTrigger'. 
+  // Sempre que o número mudar, ele executa a busca de dados novamente.
   useEffect(() => {
     const fetchStats = async () => {
       try {
