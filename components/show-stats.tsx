@@ -3,16 +3,14 @@
 import { useEffect, useState } from "react"
 import { StatsCard } from "./stats-card"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Folder, MapPin, User, Loader2, Music, Star } from "lucide-react"
+import { Folder, MapPin, User, Loader2, Star } from "lucide-react"
 
-// Novo tipo para as músicas da lista Top 5
 type TopSong = {
   title: string;
   artist: string;
   play_count: number;
 }
 
-// O tipo principal agora espera um array de TopSong
 type ShowStatsData = {
   total_shows: number;
   most_frequent_venue: string;
@@ -20,10 +18,16 @@ type ShowStatsData = {
   top_songs: TopSong[];
 };
 
-export function ShowStats() {
+// 1. O componente agora espera receber a prop 'refetchTrigger'
+interface ShowStatsProps {
+  refetchTrigger: number;
+}
+
+export function ShowStats({ refetchTrigger }: ShowStatsProps) {
   const [stats, setStats] = useState<ShowStatsData | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // 2. O useEffect agora depende do 'refetchTrigger'.
   useEffect(() => {
     const fetchStats = async () => {
       try {
@@ -39,7 +43,7 @@ export function ShowStats() {
       }
     };
     fetchStats();
-  }, []);
+  }, [refetchTrigger]);
 
   if (loading) {
     return (
@@ -50,19 +54,16 @@ export function ShowStats() {
   }
 
   if (!stats || stats.total_shows === 0) {
-    return null; // Não mostra nada se não houver shows
+    return null; 
   }
 
   return (
     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-5 mb-6">
-      {/* Cards de estatísticas simples (agora ocupam 3 colunas) */}
       <div className="lg:col-span-3 grid grid-cols-1 sm:grid-cols-3 gap-6">
         <StatsCard title="Total de Shows" value={stats.total_shows.toString()} icon={Folder} />
         <StatsCard title="Local Mais Frequente" value={stats.most_frequent_venue || 'N/A'} icon={MapPin} />
         <StatsCard title="Artista Mais Tocado" value={stats.most_frequent_artist || 'N/A'} icon={User} />
       </div>
-      
-      {/* Novo card para o Top 5 (ocupa 2 colunas) */}
       <div className="lg:col-span-2">
         <Card className="h-full">
           <CardHeader>
@@ -88,7 +89,7 @@ export function ShowStats() {
                 ))}
               </ol>
             ) : (
-              <p className="text-sm text-muted-foreground text-center py-4">Nenhuma música tocada ainda para gerar o Top 5.</p>
+              <p className="text-sm text-muted-foreground text-center py-4">Nenhuma música tocada para gerar o Top 5.</p>
             )}
           </CardContent>
         </Card>

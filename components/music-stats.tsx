@@ -1,11 +1,9 @@
-// components/music-stats.tsx
 "use client"
 
 import { useEffect, useState } from "react"
 import { StatsCard } from "./stats-card"
 import { Music, Clock, User, BarChart, Loader2 } from "lucide-react"
 
-// Definimos a estrutura dos dados que a API vai retornar
 type MusicStatsData = {
   total_songs: number;
   total_duration_secs: number;
@@ -14,7 +12,10 @@ type MusicStatsData = {
   most_frequent_tone: string;
 };
 
-// Helper para formatar segundos para MM:SS
+interface MusicStatsProps {
+  refetchTrigger: number;
+}
+
 const formatDuration = (totalSeconds: number = 0) => {
     const hours = Math.floor(totalSeconds / 3600);
     const minutes = Math.floor((totalSeconds % 3600) / 60);
@@ -26,8 +27,7 @@ const formatDuration = (totalSeconds: number = 0) => {
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
 };
 
-
-export function MusicStats() {
+export function MusicStats({ refetchTrigger }: MusicStatsProps) {
   const [stats, setStats] = useState<MusicStatsData | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -46,7 +46,7 @@ export function MusicStats() {
       }
     };
     fetchStats();
-  }, []);
+  }, [refetchTrigger]);
 
   if (loading) {
     return (
@@ -57,7 +57,7 @@ export function MusicStats() {
   }
 
   if (!stats || stats.total_songs === 0) {
-    return null; // Não mostra nada se não houver músicas
+    return null;
   }
 
   return (

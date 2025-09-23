@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { DashboardHeader } from "@/components/dashboard-header"
 import { MusicLibrary } from "@/components/music-library"
@@ -11,6 +11,12 @@ import { ShowStats } from "@/components/show-stats"
 
 export default function DashboardPage() {
   const router = useRouter()
+  
+  const [statsRefetchTrigger, setStatsRefetchTrigger] = useState(0);
+
+  const handleDataChange = () => {
+    setStatsRefetchTrigger(prev => prev + 1);
+  };
 
   useEffect(() => {
     const isAuthenticated = localStorage.getItem("casa-nova-auth")
@@ -20,10 +26,8 @@ export default function DashboardPage() {
   }, [router])
 
   return (
-    // MUDANÇA: Removemos a classe "min-h-screen" daqui
     <div className="bg-background">
       <DashboardHeader />
-
       <main className="container mx-auto px-4 py-6">
         <Tabs defaultValue="library" className="w-full">
           <TabsList className="grid w-full grid-cols-2 mb-6 h-12">
@@ -38,13 +42,13 @@ export default function DashboardPage() {
           </TabsList>
 
           <TabsContent value="library" className="mt-0 space-y-6">
-            <MusicStats />
-            <MusicLibrary />
+            <MusicStats refetchTrigger={statsRefetchTrigger} />
+            <MusicLibrary onDataChange={handleDataChange} />
           </TabsContent>
 
           <TabsContent value="shows" className="mt-0 space-y-6">
-            <ShowStats />
-            <ShowsGrid />
+            <ShowStats refetchTrigger={statsRefetchTrigger} />
+            <ShowsGrid onDataChange={handleDataChange} />
           </TabsContent>
         </Tabs>
       </main>
