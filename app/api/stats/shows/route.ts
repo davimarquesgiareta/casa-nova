@@ -1,6 +1,8 @@
-// src/app/api/stats/shows/route.ts
 import { createClient } from '@supabase/supabase-js'
 import { NextResponse } from 'next/server'
+
+// MUDANÇA: Esta linha força a rota a ser sempre dinâmica, desativando o cache.
+export const dynamic = 'force-dynamic';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
